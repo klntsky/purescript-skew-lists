@@ -24,6 +24,7 @@ derive instance genericSkewList :: Generic (SkewList a) _
 instance showSkewList :: Show a => Show (SkewList a) where
   show = genericShow
 
+nil :: forall a. SkewList a
 nil = SkewList mempty
 
 cons :: forall a. a -> SkewList a -> SkewList a
@@ -50,7 +51,6 @@ uncons (SkewList ({ weight, tree: Node x t₁ t₂ } L.: ts )) =
 uncons _ = Nothing
 
 
--- fixed version
 lookup :: forall a. Int -> SkewList a -> Maybe a
 lookup ix (SkewList ({ weight, tree } L.: ts)) =
   if ix < weight
@@ -58,7 +58,7 @@ lookup ix (SkewList ({ weight, tree } L.: ts)) =
   else lookup (ix - weight) (SkewList ts)
 lookup _ _ = Nothing
 
--- fixed version
+
 lookupTree :: forall a. Int -> Tree a -> Int -> Maybe a
 lookupTree w (Node x _ _) 0 = Just x
 lookupTree w (Node x t₁ t₂) ix =
@@ -69,20 +69,9 @@ lookupTree 1 (Leaf x) 0 = Just x
 lookupTree _ (Leaf x) _ = Nothing
 
 
--- original version from PFDS
-lookupOriginal :: forall a. Int -> SkewList a -> Maybe a
-lookupOriginal ix (SkewList ({ weight, tree } L.: ts)) =
-  if ix < weight
-  then lookupTreeOriginal weight tree ix
-  else lookupOriginal (ix - weight) (SkewList ts)
-lookupOriginal _ _ = Nothing
-
--- original version from PFDS
-lookupTreeOriginal :: forall a. Int -> Tree a -> Int -> Maybe a
-lookupTreeOriginal w (Node x _ _) 0 = Just x
-lookupTreeOriginal w (Node x t₁ t₂) ix =
-  if ix < w `div` 2
-  then lookupTreeOriginal (w `div` 2) t₁ (ix - 1)
-  else lookupTreeOriginal (w `div` 2) t₂ (ix - 1 - w `div` 2)
-lookupTreeOriginal 1 (Leaf x) 0 = Just x
-lookupTreeOriginal _ (Leaf x) _ = Nothing
+length :: forall a. SkewList a -> Int
+length = go 0
+  where
+    go acc (SkewList ({ weight, tree } L.: rest)) =
+      go (acc + weight) (SkewList rest)
+    go acc _ = acc
